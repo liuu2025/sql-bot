@@ -1,0 +1,6 @@
+# Fast local refresh using the already built Python/embedding runtime.
+# Dependency changes must use Dockerfile to build a new base runtime first.
+ARG BASE_RUNTIME=sqlbot-local-app:dev
+FROM ${BASE_RUNTIME}
+COPY --from=backend . /opt/sqlbot/app
+COPY --from=built_frontend . /opt/sqlbot/frontend/dist

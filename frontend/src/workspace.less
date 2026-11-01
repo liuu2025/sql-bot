@@ -1,0 +1,114 @@
+/* Shared visual language for the data workbench. Business components keep their
+   own layout and the existing Element Plus variables remain the theme API. */
+:root {
+  --ed-font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
+.system-layout .ed-menu-vertical .ed-menu-item.is-active,
+.system-layout .ed-menu-vertical .ed-sub-menu.is-active:not(.is-opened) .ed-sub-menu__title {
+  background: #e6eff8 !important;
+  color: #286697 !important;
+  box-shadow: inset 3px 0 #347ba7;
+}
+.system-layout .ed-menu-vertical .ed-menu-item {
+  margin-bottom: 5px;
+  border-radius: 8px !important;
+  font-size: 13px;
+  color: #697b92;
+}
+.system-layout .ed-menu-vertical .ed-menu-item:hover {
+  background: #edf2f8;
+}
+.system-layout .chat-container-left {
+  background: #f9fbfe !important;
+  border-right: 1px solid #e3eaf2;
+}
+.system-layout .chat-record-list {
+  background: #fff;
+}
+.workspace-welcome-block {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+}
+.system-layout .model-config .model-methods {
+  height: auto;
+  min-height: 76px;
+  padding: 22px 26px;
+}
+.system-layout .model-config .card-content {
+  padding: 20px 26px;
+}
+.model-setup-banner {
+  margin: 0 26px 12px;
+  padding: 20px 24px;
+  background: #f1f6fb;
+  border: 1px solid #dce7f3;
+  border-radius: 10px;
+}
+.model-setup-banner h2 {
+  font-size: 18px;
+  color: #284c70;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.model-setup-banner p {
+  font-size: 12px;
+  color: #70859d;
+  line-height: 1.9;
+}
+.model-setup-banner .model-setup-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+}
+.model-setup-steps span {
+  font-size: 11px;
+  color: #447499;
+  background: #fff;
+  border: 1px solid #dfe8f2;
+  border-radius: 5px;
+  padding: 5px 10px;
+}
+.model-form .model-form-guide {
+  margin-bottom: 22px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: #f0f6fb;
+  color: #607d97;
+  font-size: 12px;
+  line-height: 1.9;
+}
+.model-form .form-content {
+  max-width: 800px;
+  width: calc(100% - 48px) !important;
+}
+.model-form .fetch-result {
+  margin: 8px 0 22px;
+  font-size: 12px;
+  color: #487697;
+}
+.model-drawer-fullscreen .model-form:not(.is-edit_model) {
+  width: 100% !important;
+}
+.model-drawer-fullscreen .model-form .model-name:empty {
+  display: none;
+}
+@media (max-width: 650px) {
+  .model-setup-banner {
+    margin: 0 12px 12px;
+    padding: 16px;
+  }
+  .system-layout .model-config .model-methods {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px;
+  }
+  .system-layout .model-config .button-input {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .model-form .form-content {
+    width: calc(100% - 24px) !important;
+  }
+}

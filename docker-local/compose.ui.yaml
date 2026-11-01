@@ -1,0 +1,8 @@
+services:
+  app:
+    image: shuxi-workbench:local
+    build:
+      dockerfile: Dockerfile.runtime
+      additional_contexts:
+        backend: ../backend
+        built_frontend: ../frontend/dist

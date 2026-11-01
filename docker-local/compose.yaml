@@ -1,0 +1,93 @@
+# 数析本地隔离运行编排。
+# 先创建 private/sqlbot.local.env，再执行：
+# docker compose --env-file private/sqlbot.local.env -f docker-local/compose.yaml up -d --build
+# 停止: docker compose --env-file private/sqlbot.local.env -f docker-local/compose.yaml down
+# 清库重来: docker compose --env-file private/sqlbot.local.env -f docker-local/compose.yaml down -v
+
+name: sqlbot-local
+
+services:
+  pg:
+    image: pgvector/pgvector:0.8.7-pg17-bookworm
+    container_name: sqlbot-local-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SQLBOT_POSTGRES_DB:?set SQLBOT_POSTGRES_DB in private/sqlbot.local.env}
+      POSTGRES_USER: ${SQLBOT_POSTGRES_USER:?set SQLBOT_POSTGRES_USER in private/sqlbot.local.env}
+      POSTGRES_PASSWORD: ${SQLBOT_POSTGRES_PASSWORD:?set SQLBOT_POSTGRES_PASSWORD in private/sqlbot.local.env}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+      TZ: Asia/Shanghai
+    volumes:
+      - sqlbot-local-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks:
+      - sqlbot-local
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      additional_contexts:
+        backend: ../backend
+        frontend: ../frontend
+      args:
+        UV_DEFAULT_INDEX: https://pypi.org/simple
+        HF_ENDPOINT: https://huggingface.co
+    image: sqlbot-local-app:dev
+    container_name: sqlbot-local-app
+    restart: unless-stopped
+    depends_on:
+      pg:
+        condition: service_healthy
+    environment:
+      # --- 系统库（唯一必填连接）---
+      SQLBOT_DB_URL: ${SQLBOT_DB_URL:?set SQLBOT_DB_URL in private/sqlbot.local.env}
+      SECRET_KEY: ${SQLBOT_SECRET_KEY:?set SQLBOT_SECRET_KEY in private/sqlbot.local.env}
+      DEFAULT_PWD: ${SQLBOT_DEFAULT_PWD:?set SQLBOT_DEFAULT_PWD in private/sqlbot.local.env}
+      # 本地单人模式：浏览器自动获取固定内部会话，不显示登录页。
+      SQLBOT_LOCAL_SINGLE_USER_MODE: "true"
+      # --- 可观测性 ---
+      LOG_LEVEL: INFO
+      SQL_DEBUG: "false"
+      SQLBOT_DOC_ENABLED: "true"
+      # --- 嵌入/召回（向量选表、术语与 SQL 示例召回）---
+      EMBEDDING_ENABLED: "true"
+      TABLE_EMBEDDING_ENABLED: "true"
+      TABLE_EMBEDDING_KEYWORD_ENABLED: "true"
+      LOCAL_MODEL_PATH: /opt/sqlbot/models
+      HF_HOME: /opt/sqlbot/models
+      # --- 路径（与镜像内目录一致，勿外挂覆盖）---
+      MCP_IMAGE_PATH: /opt/sqlbot/images
+      EXCEL_PATH: /opt/sqlbot/data/excel
+      UPLOAD_DIR: /opt/sqlbot/data/file
+      LOG_DIR: /opt/sqlbot/logs
+      # --- 图片回链（g2-ssr 未启用时 MCP 图片不可用，Web 端不受影响）---
+      MCP_IMAGE_HOST: "http://127.0.0.1:7201"
+      SERVER_IMAGE_HOST: "http://127.0.0.1:7201/images/"
+      # --- 运行时 ---
+      SQLBOT_ENABLE_MCP: "true"
+      CACHE_TYPE: memory
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:7200:8000"   # Web UI + REST API
+      - "127.0.0.1:7201:8001"   # MCP server
+      # 预留：7202 -> g2-ssr(3000)、7203 -> 待加演示业务库，均须加在本 compose 内
+    networks:
+      - sqlbot-local
+
+volumes:
+  sqlbot-local-pgdata:
+    name: sqlbot-local-pgdata
+
+networks:
+  sqlbot-local:
+    name: sqlbot-local
+    # 显式指定稳定的本地开发网段；如与本机网络冲突，请改为未占用的私有网段。
+    ipam:
+      config:
+        - subnet: 10.72.0.0/24
+          gateway: 10.72.0.1
